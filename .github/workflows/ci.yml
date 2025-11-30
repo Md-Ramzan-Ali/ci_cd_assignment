@@ -1,0 +1,49 @@
+﻿name: CI Pipeline C Project
+on: [push, pull_request]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: sudo apt-get update && sudo apt-get install -y build-essential zip unzip
+
+      - name: Run tests
+        run: |
+          gcc -I./src -o ./bin/test_runner tests/testcase.c src/sign.c
+          ./bin/test_runner
+
+      - name: Create package
+        run: |
+          mkdir -p dist
+          if [ -f bin/test_runner ]; then zip -j dist/artifact.zip bin/test_runner; fi
+          if [ -f bin/test_runner.exe ]; then zip -j dist/artifact.zip bin/test_runner.exe; fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifact
+          path: dist/artifact.zip
+
+  deploy-sim:
+    needs: build-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifact
+
+      - name: List files
+        run: ls -la
+
+      - name: Simulated Deploy
+        env:
+          DEPLOY_API_KEY: ${{ secrets.DEPLOY_API_KEY }}
+        run: |
+          echo "Contents of artifact:"
+          unzip -l dist/artifact.zip || true
+          echo "Deployment using API Key: $DEPLOY_API_KEY"
