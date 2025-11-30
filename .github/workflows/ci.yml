@@ -14,12 +14,12 @@ jobs:
       - name: Prepare bin directory
         run: mkdir -p bin
 
-- name: Run tests
-  run: |
-    mkdir -p bin
-    ls -la bin
-    gcc -I./src -o ./bin/test_runner tests/testcase.c src/sign.c
-    ./bin/test_runner || true
+      - name: Run tests
+        run: |
+          mkdir -p bin
+          ls -la bin
+          gcc -I./src -o ./bin/test_runner tests/testcase.c src/sign.c
+          ./bin/test_runner || true
 
       - name: Create package
         run: |
